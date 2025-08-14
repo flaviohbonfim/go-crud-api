@@ -1,0 +1,543 @@
+definitions:
+  products.CreateProductRequest:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 120
+        minLength: 2
+        type: string
+      price:
+        minimum: 0
+        type: number
+      stock:
+        minimum: 0
+        type: integer
+    required:
+    - name
+    - price
+    - stock
+    type: object
+  products.Product:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        maxLength: 120
+        minLength: 2
+        type: string
+      owner_id:
+        type: string
+      price:
+        minimum: 0
+        type: number
+      stock:
+        minimum: 0
+        type: integer
+      updated_at:
+        type: string
+    required:
+    - name
+    - price
+    - stock
+    type: object
+  products.UpdateProductRequest:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 120
+        minLength: 2
+        type: string
+      price:
+        minimum: 0
+        type: number
+      stock:
+        minimum: 0
+        type: integer
+    required:
+    - name
+    - price
+    - stock
+    type: object
+  users.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  users.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  users.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  users.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  web.ApiError:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  web.Response:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/web.ApiError'
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password, returns JWT tokens
+      parameters:
+      - description: User login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/users.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User logged in successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/users.LoginResponse'
+              type: object
+        "400":
+          description: Bad request or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+      summary: Log in a user
+      tags:
+      - Auth
+  /v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with name, email, and password
+      parameters:
+      - description: User registration data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/users.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/users.User'
+              type: object
+        "400":
+          description: Bad request or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+      summary: Register a new user
+      tags:
+      - Auth
+  /v1/products:
+    post:
+      consumes:
+      - application/json
+      description: Create a new product with name, description, price, and stock
+      parameters:
+      - description: Product creation data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/products.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Product created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/products.Product'
+              type: object
+        "400":
+          description: Bad request or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new product
+      tags:
+      - Products
+  /v1/products/{productID}:
+    delete:
+      description: Delete a product by its ID. Only owner or admin can delete.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Product deleted successfully
+        "400":
+          description: Invalid product ID format
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "403":
+          description: Forbidden (not owner or admin)
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "404":
+          description: Product not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a product
+      tags:
+      - Products
+    get:
+      description: Get product details by its ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product details
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/products.Product'
+              type: object
+        "400":
+          description: Invalid product ID format
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "404":
+          description: Product not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get product by ID
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: Update product details by its ID. Only owner or admin can update.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      - description: Product update data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/products.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/products.Product'
+              type: object
+        "400":
+          description: Bad request or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "403":
+          description: Forbidden (not owner or admin)
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "404":
+          description: Product not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update an existing product
+      tags:
+      - Products
+  /v1/users:
+    get:
+      description: Get a list of all registered users (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/users.User'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "403":
+          description: Forbidden (not admin)
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List all users
+      tags:
+      - Users
+swagger: "2.0"
