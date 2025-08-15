@@ -23,7 +23,6 @@ jobs:
     - name: Run tests
       run: go test ./... -v
 
-    # Opcional: Descomente para rodar o linter se você usa golangci-lint
     - name: Download Go modules
       run: go mod download
 
@@ -33,13 +32,12 @@ jobs:
     - name: Run tests
       run: go test ./... -v
 
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v4
-      with:
-        version: v1.57 # Use uma versão específica do linter
-        args: --verbose --tests=true
-        working-directory: .
+    - name: Install golangci-lint
+      run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.57.2
 
-    # Opcional: Descomente para construir a aplicação
+    - name: Run golangci-lint manually
+      run: |
+        golangci-lint run ./... --verbose --tests=true
+
     - name: Build
       run: go build -v ./cmd/api
