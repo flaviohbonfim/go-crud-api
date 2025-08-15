@@ -1,36 +1,41 @@
 # Binaries for programs and plugins
 *.exe
+*.exe~
 *.dll
 *.so
 *.dylib
 
-# Test binary, build with `go test -c`
+# Test binary, built with `go test -c`
 *.test
 
 # Output of the go toolchain
-*.out
+.cache/
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Dependencies
+/vendor/
 
 # Go workspace file
 go.work
+go.work.sum
 
 # Environment variables
 .env
-.env.*
-!.env.example
 
-# IDE-specific files
+# IDEs and editors
 .idea/
 .vscode/
-*.iml
+*.sublime-project
+*.sublime-workspace
 
 # Build outputs
 /bin/
-/build/
 /dist/
 
-# Docker
-docker-compose.override.yml
+# Logs
 *.log
+
+# Swagger docs generated files
+/docs/
+
+# Local development tools
+air

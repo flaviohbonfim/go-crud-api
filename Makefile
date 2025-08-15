@@ -21,16 +21,15 @@ run:
 # --- Quality ---
 lint:
 	@echo "Running linter..."
-	# golangci-lint run
-
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./...
 
 test:
 	@echo "Running tests..."
-	# go test ./... -v
+	go test ./... -v
 
 cover:
 	@echo "Running tests with coverage..."
-	# go test ./... -coverprofile=coverage.out
+	go test ./... -coverprofile=coverage.out
 
 # --- Database ---
 migrate-up:

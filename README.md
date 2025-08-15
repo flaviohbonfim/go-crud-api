@@ -1,79 +1,156 @@
-# Go CRUD API
+# Projeto Go — API CRUD (Usuários & Produtos)
 
-Este é um projeto de API RESTful em Go, projetado para gerenciar usuários e produtos. Ele segue as melhores práticas de arquitetura, utilizando uma estrutura de projeto limpa e modular, com foco em separação de responsabilidades e testabilidade.
+## Visão Geral
 
-## Funcionalidades
+Este projeto é uma API RESTful desenvolvida em Go, focada no gerenciamento de usuários e produtos. Ele incorpora as melhores práticas de arquitetura, testes, segurança e automação, sendo um excelente ponto de partida para quem deseja aprender Go construindo uma aplicação robusta.
 
-- **Gerenciamento de Usuários:**
-    - Criação, leitura, atualização e exclusão de usuários.
-    - Autenticação de usuários via JWT.
-- **Gerenciamento de Produtos:**
-    - Criação, leitura, atualização e exclusão de produtos.
-- **API RESTful:**
-    - Endpoints bem definidos para cada recurso.
-    - Respostas padronizadas em JSON.
-- **Banco de Dados:**
-    - Integração com PostgreSQL.
-    - Migrações de banco de dados usando `migrate`.
-- **Docker:**
-    - Configuração para rodar a aplicação e o banco de dados em contêineres Docker.
-- **Documentação:**
-    - Documentação da API gerada automaticamente com Swagger.
-- **Logging:**
-    - Sistema de logging configurável.
+## Objetivo
 
-## Tecnologias Utilizadas
+Construir uma API REST em Go para cadastro e autenticação de usuários e CRUD de produtos, usando PostgreSQL como banco de dados e JWT para autenticação. O projeto é projetado para ser didático, mas aplicando um conjunto sólido de melhores práticas de arquitetura, testes, qualidade e automação.
 
-- **Go:** Linguagem de programação principal.
-- **PostgreSQL:** Banco de dados relacional.
-- **Docker & Docker Compose:** Para orquestração de contêineres.
-- **JWT (JSON Web Tokens):** Para autenticação.
-- **Swagger:** Para documentação da API.
-- **Viper:** Para gerenciamento de configurações.
-- **GORM:** ORM para interação com o banco de dados (ou similar, dependendo da implementação).
-- **BCrypt:** Para hashing de senhas.
+## Stack e Principais Dependências
 
-## Estrutura do Projeto
+*   **Go**: 1.22+
+*   **Framework HTTP**: `chi` (leve e idiomático)
+*   **ORM/DB**: `gorm.io/gorm` + `gorm.io/driver/postgres`
+*   **Migrações**: `golang-migrate`
+*   **JWT**: `github.com/golang-jwt/jwt/v5`
+*   **Hash de senha**: `golang.org/x/crypto/bcrypt`
+*   **Validação**: `github.com/go-playground/validator/v10`
+*   **Config**: `github.com/spf13/viper`
+*   **Logs**: `github.com/rs/zerolog`
+*   **Docs (OpenAPI)**: `github.com/swaggo/swag` + `github.com/swaggo/http-swagger`
+*   **Testes**: `testing`, `httptest`, `testify` (assert/require)
 
-```
-.
-├── cmd/                # Ponto de entrada da aplicação
-│   └── api/            # Aplicação principal da API
-│       └── main.go
-├── docs/               # Documentação Swagger
-├── internal/           # Código interno da aplicação
-│   ├── config/         # Configurações da aplicação
-│   ├── database/       # Conexão e migrações do banco de dados
-│   ├── domain/         # Lógica de negócio (entidades, serviços, repositórios, handlers)
-│   │   ├── products/
-│   │   └── users/
-│   ├── http/           # Camada HTTP (rotas, middlewares, handlers)
-│   │   └── middleware/
-│   ├── logger/         # Configuração de logging
-│   └── repository/     # Implementações de repositórios
-├── migrations/         # Arquivos de migração do banco de dados
-├── pkg/                # Pacotes utilitários e genéricos
-│   ├── jwt/            # Funções JWT
-│   ├── pagination/     # Lógica de paginação
-│   ├── password/       # Funções de hashing de senha
-│   └── web/            # Utilitários web (respostas HTTP)
-├── .env.example        # Exemplo de arquivo de variáveis de ambiente
-├── docker-compose.yml  # Configuração Docker Compose
-├── go.mod              # Módulos Go
-├── go.sum              # Checksums de módulos Go
-├── Makefile            # Comandos úteis para desenvolvimento
-└── README.md           # Este arquivo
-```
+## Arquitetura (Clean/Hexagonal simplificada)
+
+A arquitetura do projeto segue princípios de Clean Architecture/Arquitetura Hexagonal, dividindo as responsabilidades em camadas claras:
+
+*   **/cmd/api**: Ponto de entrada da aplicação (`main.go`), responsável por inicializar configurações, logger, conexão com o DB, rotas e o servidor HTTP.
+*   **/internal/config**: Gerencia o carregamento de variáveis de ambiente usando Viper.
+*   **/internal/logger**: Configuração centralizada do Zerolog para logs estruturados.
+*   **/internal/database**: Lida com a conexão ao PostgreSQL e a aplicação de migrações.
+*   **/internal/domain/{users,products}**: Contém a lógica de negócio específica para usuários e produtos.
+    *   `entity.go`: Define os modelos/entidades de dados.
+    *   `repository.go`: Define as interfaces para operações de persistência.
+    *   `service.go`: Implementa as regras de negócio, validações e orquestra as operações de repositório.
+    *   `handler.go`: Contém os handlers HTTP que processam as requisições e chamam os serviços.
+*   **/internal/repository**: Implementações concretas das interfaces de repositório, utilizando GORM para interagir com o banco de dados.
+*   **/internal/http**:
+    *   `router.go`: Configura o roteador Chi, define as rotas e aplica middlewares.
+    *   `middleware/`: Contém middlewares HTTP (autenticação JWT, recuperação de panics, etc.).
+    *   `health.go`: Handler para o endpoint de health check.
+*   **/pkg**: Pacotes de utilitários genéricos e reutilizáveis (JWT, hashing de senha, respostas HTTP padronizadas).
+*   **/migrations**: Arquivos SQL para as migrações do banco de dados (`.up.sql`).
+*   **/docs**: Arquivos gerados da especificação OpenAPI (via `swag`).
+*   **Padrões Aplicados**: Repository Pattern, Service Layer, DTOs (Requests/Responses), Erro Estruturado, Context, Dependency Injection simples.
+
+## Modelos (MVP)
+
+### User
+
+*   `ID (uuid)`
+*   `Name (string, 2–100)`
+*   `Email (string, unique, válido)`
+*   `PasswordHash (string)`
+*   `Role (enum: "user"|"admin")`
+*   `CreatedAt/UpdatedAt (timestamp)`
+
+### Product
+
+*   `ID (uuid)`
+*   `Name (string, 2–120)`
+*   `Description (string, opcional)`
+*   `Price (decimal >= 0)`
+*   `Stock (int >= 0)`
+*   `OwnerID (uuid, FK -> users.id)`
+*   `CreatedAt/UpdatedAt`
+
+## Regras de Negócio
+
+*   **Autenticação**: Login por email+senha retorna `access_token` (JWT, exp. 15m) e `refresh_token` (exp. 7d).
+*   **Permissões**:
+    *   `admin`: CRUD de qualquer produto e listar usuários.
+    *   `user`: CRUD apenas dos **seus** produtos; não pode listar usuários.
+*   **Senhas**: Sempre com `bcrypt` (cost 10–12).
+*   **Email**: Único e case-insensitive.
+
+## Endpoints (REST)
+
+### Autenticação
+*   `POST /v1/auth/register` → Cria usuário (público)
+*   `POST /v1/auth/login` → Retorna tokens (público)
+
+### Usuários (Admin)
+*   `GET /v1/users` → Lista usuários (requer `admin` role)
+
+### Produtos
+*   `POST /v1/products` → Cria produto (requer autenticação)
+*   `GET /v1/products/{id}` → Busca produto por ID (requer autenticação)
+*   `PUT /v1/products/{id}` → Atualiza produto (requer autenticação, owner ou admin)
+*   `DELETE /v1/products/{id}` → Deleta produto (requer autenticação, owner ou admin)
+
+### Outros
+*   `GET /healthz` → Verifica a saúde da aplicação e conexão com o DB.
+*   `GET /swagger/*` → Interface da documentação OpenAPI (Swagger UI).
+
+## Autenticação & Segurança
+
+*   **JWT** assinado com HS256; `sub` = userID, `role` em `claims`.
+*   **Middlewares**: `RequestID`, `RealIP`, `Recoverer`, `AuthMiddleware` (checa `Authorization: Bearer <token>`), `HasRoleMiddleware` (para controle de acesso baseado em role).
+*   **Armazenar** apenas hash de senha; nunca retornar campos sensíveis.
+
+## Validação & Respostas
+
+*   Validação de payloads com `validator` e tags (`validate:"required,email"`).
+*   Respostas JSON padronizadas via `pkg/web`:
+    ```json
+    { "data": {...}, "error": null }
+    { "data": null, "error": { "code": "bad_request", "message": "..." } }
+    ```
+
+## Banco de Dados & Migrações
+
+*   **PostgreSQL 16** via `docker-compose`.
+*   **Migrations** com `golang-migrate`, aplicadas automaticamente na inicialização da aplicação em ambiente de desenvolvimento.
+*   **Índices**: `users(email unique)`, `products(name)`, `products(owner_id)`, `products(price)`.
+
+## Configuração (12-factor)
+
+*   Variáveis de ambiente carregadas via `.env` (exemplo em `.env.example`).
+*   `viper` para carregar as configurações.
+
+## Qualidade, Testes e CI
+
+*   **Testes unitários**: Serviços (regras de negócio) com mocks do repositório, utilitários (hash, jwt, validação).
+*   **Testes de handler**: `httptest` para rotas chave (login, criar produto, autorização).
+*   **golangci-lint**: Ferramenta de linting para garantir a qualidade do código.
+*   **CI (GitHub Actions)**: Configuração para `lint`, `test` e `build` (ainda a ser implementada).
+
+## Observabilidade
+
+*   **Logs estruturados** (JSON) com `zerolog`.
+*   **Healthcheck**: `GET /healthz` (checa DB com `ping`).
+
+## Docker & Makefile
+
+*   **`docker-compose.yml`**: Define os serviços da API e do PostgreSQL.
+*   **`Makefile`**: Contém alvos para facilitar o desenvolvimento e a automação.
+
+## Documentação (OpenAPI)
+
+*   Handlers anotados com comentários `swag`.
+*   Documentação gerada via `swag init` e servida em `GET /swagger/*` via `http-swagger`.
 
 ## Como Rodar o Projeto
 
 ### Pré-requisitos
 
-- Go (versão 1.18 ou superior)
-- Docker e Docker Compose
-- Make (opcional, para usar os comandos do Makefile)
+*   [Go](https://golang.org/dl/) (versão 1.22+)
+*   [Docker](https://www.docker.com/get-started/) e [Docker Compose](https://docs.docker.com/compose/install/)
+*   Um editor de código (VS Code, GoLand, etc.)
 
-### Configuração
+### Passos para Rodar
 
 1.  **Clone o repositório:**
     ```bash
@@ -81,87 +158,54 @@ Este é um projeto de API RESTful em Go, projetado para gerenciar usuários e pr
     cd go-crud-api
     ```
 
-2.  **Variáveis de Ambiente:**
-    Crie um arquivo `.env` na raiz do projeto, baseado no `.env.example`.
+2.  **Configure as variáveis de ambiente:**
+    Crie um arquivo `.env` na raiz do projeto, copiando o conteúdo de `.env.example` e ajustando conforme necessário.
     ```bash
     cp .env.example .env
-    ```
-    Edite o arquivo `.env` com suas configurações, especialmente as credenciais do banco de dados e a chave JWT.
-
-### Usando Docker Compose (Recomendado)
-
-A maneira mais fácil de rodar o projeto é usando Docker Compose, que irá configurar o banco de dados e a aplicação Go.
-
-1.  **Construa e inicie os contêineres:**
-    ```bash
-    docker-compose up --build
-    ```
-    Isso irá construir a imagem Go, iniciar o contêiner do PostgreSQL e o contêiner da API.
-
-2.  **Executar Migrações (se necessário):**
-    As migrações são aplicadas automaticamente na inicialização do contêiner da API. Se precisar rodar manualmente:
-    ```bash
-    docker-compose run --rm api migrate up
+    # Edite o .env se precisar mudar portas ou credenciais
     ```
 
-3.  **Acessar a API:**
-    A API estará disponível em `http://localhost:8080`.
-    A documentação Swagger estará disponível em `http://localhost:8080/swagger/index.html`.
-
-### Rodando Localmente (Sem Docker para a Aplicação Go)
-
-Se você preferir rodar a aplicação Go diretamente em sua máquina, mas ainda usar o Docker para o PostgreSQL:
-
-1.  **Inicie apenas o contêiner do PostgreSQL:**
+3.  **Inicie o banco de dados:**
     ```bash
     docker-compose up -d postgres
     ```
+    Aguarde alguns segundos para o PostgreSQL iniciar completamente.
 
-2.  **Execute as migrações:**
-    Certifique-se de ter a ferramenta `migrate` instalada (`go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest`).
+4.  **Instale as dependências Go:**
     ```bash
-    migrate -path migrations -database "postgres://user:password@localhost:5432/dbname?sslmode=disable" up
-    ```
-    (Ajuste a string de conexão conforme seu `.env`)
-
-3.  **Inicie a aplicação Go:**
-    ```bash
-    go run cmd/api/main.go
+    go mod tidy
     ```
 
-## Endpoints da API
+5.  **Gere a documentação OpenAPI:**
+    ```bash
+    go run github.com/swaggo/swag/cmd/swag init -g cmd/api/main.go -o ./docs
+    ```
 
-A documentação completa da API pode ser encontrada em `http://localhost:8080/swagger/index.html` após a aplicação estar rodando.
+6.  **Inicie a aplicação:**
+    ```bash
+    go run ./cmd/api/main.go
+    ```
+    As migrações do banco de dados serão aplicadas automaticamente na inicialização.
 
-### Exemplos de Endpoints:
+7.  **Acesse a API:**
+    *   **Swagger UI**: `http://localhost:8080/swagger/`
+    *   **Health Check**: `http://localhost:8080/healthz`
+    *   **Endpoints da API**: Use ferramentas como `curl` ou Postman para interagir com os endpoints de autenticação, usuários e produtos.
 
--   **Auth:**
-    -   `POST /api/v1/auth/register` - Registrar um novo usuário
-    -   `POST /api/v1/auth/login` - Autenticar um usuário
--   **Users:**
-    -   `GET /api/v1/users` - Listar todos os usuários (requer autenticação)
-    -   `GET /api/v1/users/{id}` - Obter um usuário por ID (requer autenticação)
-    -   `PUT /api/v1/users/{id}` - Atualizar um usuário (requer autenticação)
-    -   `DELETE /api/v1/users/{id}` - Excluir um usuário (requer autenticação)
--   **Products:**
-    -   `GET /api/v1/products` - Listar todos os produtos
-    -   `GET /api/v1/products/{id}` - Obter um produto por ID
-    -   `POST /api/v1/products` - Criar um novo produto (requer autenticação)
-    -   `PUT /api/v1/products/{id}` - Atualizar um produto (requer autenticação)
-    -   `DELETE /api/v1/products/{id}` - Excluir um produto (requer autenticação)
+## Fluxos Principais (Critérios de Aceite)
 
-## Testes
+*   **Registro de usuário**: `POST /v1/auth/register`
+*   **Login**: `POST /v1/auth/login` (retorna `access_token` e `refresh_token`)
+*   **Criação de produto**: `POST /v1/products` (requer `access_token`)
+*   **Atualização de produto**: `PUT /v1/products/{id}` (requer `access_token`, owner ou admin)
+*   **Listagem de usuários**: `GET /v1/users` (requer `access_token` de `admin`)
 
-Para rodar os testes da aplicação:
+## Boas Práticas de Código
 
-```bash
-go test ./...
-```
-
-## Contribuição
-
-Sinta-se à vontade para contribuir com este projeto. Por favor, siga as diretrizes de contribuição (se houver) e abra um Pull Request.
-
-## Licença
-
-Este projeto está licenciado sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+*   Funções curtas, nomes claros, early-return para erros.
+*   Erros embrulhados com `fmt.Errorf("contexto: %w", err)`; nunca ignorar erro.
+*   Não exportar o que não precisa ser exportado.
+*   Handlers **somente** orquestram: validam input → chamam service → mapeiam resposta.
+*   Repositórios **somente** consultam DB; nenhum `json`/HTTP lá.
+*   Services contêm regras de negócio; transações (quando necessárias) gerenciadas aqui.
+*   Tests: um `Arrange-Act-Assert` limpo por caso; nomes de testes descritivos.

@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"errors"
 	"go-crud-api/internal/config"
 	"go-crud-api/pkg/password"
 	"time"
@@ -49,7 +50,7 @@ func (s *Service) Login(ctx context.Context, email, pass string) (string, string
 	}
 
 	if !password.CheckPasswordHash(pass, user.PasswordHash) {
-		return "", "", err // Consider a specific error for invalid credentials
+		return "", "", errors.New("invalid email or password")
 	}
 
 	accessTTL, _ := time.ParseDuration(s.config.AccessTokenTTL)
