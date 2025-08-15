@@ -17,14 +17,14 @@ jobs:
       with:
         go-version: '1.24.5' # Use a versão do Go que você está usando
 
+    - name: Clean Go module cache
+      run: go clean -modcache
+
     - name: Download Go modules
       run: go mod download
 
     - name: Run tests
       run: go test ./... -v
-
-    - name: Download Go modules
-      run: go mod download
 
     - name: Tidy Go modules
       run: go mod tidy
