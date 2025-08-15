@@ -24,10 +24,20 @@ jobs:
       run: go test ./... -v
 
     # Opcional: Descomente para rodar o linter se você usa golangci-lint
+        - name: Download Go modules
+      run: go mod download
+
+    - name: Tidy Go modules
+      run: go mod tidy
+
+    - name: Run tests
+      run: go test ./... -v
+
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v4
       with:
         version: v1.57 # Use uma versão específica do linter
+        args: --verbose --tests=true
 
     # Opcional: Descomente para construir a aplicação
     - name: Build
