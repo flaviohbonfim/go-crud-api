@@ -1,0 +1,34 @@
+name: Go CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22' # Use a versão do Go que você está usando
+
+    - name: Download Go modules
+      run: go mod download
+
+    - name: Run tests
+      run: go test ./... -v
+
+    # Opcional: Descomente para rodar o linter se você usa golangci-lint
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v4
+      with:
+        version: v1.57 # Use uma versão específica do linter
+
+    # Opcional: Descomente para construir a aplicação
+    - name: Build
+      run: go build -v ./cmd/api
