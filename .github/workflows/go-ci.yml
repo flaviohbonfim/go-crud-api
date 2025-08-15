@@ -15,7 +15,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.22' # Use a versão do Go que você está usando
+        go-version: '1.24.5' # Use a versão do Go que você está usando
 
     - name: Download Go modules
       run: go mod download
@@ -38,6 +38,7 @@ jobs:
       with:
         version: v1.57 # Use uma versão específica do linter
         args: --verbose --tests=true
+        working-directory: .
 
     # Opcional: Descomente para construir a aplicação
     - name: Build
