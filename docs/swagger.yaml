@@ -540,4 +540,10 @@ paths:
       summary: List all users
       tags:
       - Users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and a JWT.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
