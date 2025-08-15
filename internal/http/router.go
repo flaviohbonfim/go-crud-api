@@ -48,6 +48,7 @@ func InitRouter(cfg config.Config, db *gorm.DB, authHandler *users.AuthHandler, 
 
 		// Product routes
 		r.Route("/v1/products", func(r chi.Router) {
+			r.Get("/", productHandler.ListProducts)
 			r.Post("/", productHandler.CreateProduct)
 			r.Get("/{productID}", productHandler.GetProductByID)
 			r.Put("/{productID}", productHandler.UpdateProduct)

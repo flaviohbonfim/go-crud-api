@@ -233,6 +233,36 @@ paths:
       tags:
       - Auth
   /v1/products:
+    get:
+      description: Get a list of all products
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of products
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/products.Product'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Response'
+            - properties:
+                error:
+                  $ref: '#/definitions/web.ApiError'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get all products
+      tags:
+      - Products
     post:
       consumes:
       - application/json

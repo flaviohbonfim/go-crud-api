@@ -113,6 +113,25 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 	web.RespondWithJSON(w, http.StatusOK, web.Response{Data: product})
 }
 
+// ListProducts handles fetching all products.
+// @Summary Get all products
+// @Description Get a list of all products
+// @Tags Products
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} web.Response{data=[]Product} "List of products"
+// @Failure 500 {object} web.Response{error=web.ApiError} "Internal server error"
+// @Router /v1/products [get]
+func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
+	products, err := h.service.List(r.Context())
+	if err != nil {
+		web.RespondWithError(w, "internal_error", "Could not fetch products", http.StatusInternalServerError)
+		return
+	}
+
+	web.RespondWithJSON(w, http.StatusOK, web.Response{Data: products})
+}
+
 // UpdateProduct handles updating an existing product.
 // @Summary Update an existing product
 // @Description Update product details by its ID. Only owner or admin can update.

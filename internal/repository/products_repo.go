@@ -37,3 +37,12 @@ func (r *gormProductRepository) Update(ctx context.Context, product *products.Pr
 func (r *gormProductRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&products.Product{}, id).Error
 }
+
+func (r *gormProductRepository) List(ctx context.Context) ([]products.Product, error) {
+	var prods []products.Product
+	err := r.db.WithContext(ctx).Find(&prods).Error
+	if err != nil {
+		return nil, err
+	}
+	return prods, nil
+}

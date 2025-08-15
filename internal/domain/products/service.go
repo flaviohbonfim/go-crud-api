@@ -61,3 +61,8 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, name, description st
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
 }
+
+// List returns all products.
+func (s *Service) List(ctx context.Context) ([]Product, error) {
+	return s.repo.List(ctx)
+}

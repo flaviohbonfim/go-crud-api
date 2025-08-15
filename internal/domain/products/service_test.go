@@ -39,6 +39,11 @@ func (m *MockProductRepository) Delete(ctx context.Context, id uuid.UUID) error 
 	return args.Error(0)
 }
 
+func (m *MockProductRepository) List(ctx context.Context) ([]Product, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]Product), args.Error(1)
+}
+
 func TestProductService_Create(t *testing.T) {
 	repo := new(MockProductRepository)
 	service := NewService(repo)
@@ -140,6 +145,32 @@ func TestProductService_Delete(t *testing.T) {
 	repo.On("Delete", ctx, productID).Return(errors.New("db error")).Once()
 	err = service.Delete(ctx, productID)
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "db error")
+	repo.AssertExpectations(t)
+}
+
+func TestProductService_List(t *testing.T) {
+	repo := new(MockProductRepository)
+	service := NewService(repo)
+
+	ctx := context.Background()
+
+	// Test case 1: Successful list
+	expectedProducts := []Product{
+		{ID: uuid.New(), Name: "Product 1"},
+		{ID: uuid.New(), Name: "Product 2"},
+	}
+	repo.On("List", ctx).Return(expectedProducts, nil).Once()
+	products, err := service.List(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedProducts, products)
+	repo.AssertExpectations(t)
+
+	// Test case 2: Repository returns an error
+	repo.On("List", ctx).Return([]Product{}, errors.New("db error")).Once()
+	products, err = service.List(ctx)
+	assert.Error(t, err)
+	assert.Empty(t, products)
 	assert.Contains(t, err.Error(), "db error")
 	repo.AssertExpectations(t)
 }
