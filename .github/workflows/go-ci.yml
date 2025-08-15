@@ -24,7 +24,7 @@ jobs:
       run: go test ./... -v
 
     # Opcional: Descomente para rodar o linter se você usa golangci-lint
-        - name: Download Go modules
+    - name: Download Go modules
       run: go mod download
 
     - name: Tidy Go modules
