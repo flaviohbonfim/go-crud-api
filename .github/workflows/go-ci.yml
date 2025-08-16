@@ -28,9 +28,11 @@ jobs:
       run: go test -mod=vendor ./... -v
 
     - name: Install and run golangci-lint
-      run: |
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
-        golangci-lint run --mod=vendor
+      # A forma correta é usar a variável de ambiente GOFLAGS
+      # para que o linter e as ferramentas Go que ele chama usem o modo vendor.
+      run: golangci-lint run
+      env:
+        GOFLAGS: -mod=vendor
 
     - name: Build
       run: go build -mod=vendor -v ./cmd/api
