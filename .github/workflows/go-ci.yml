@@ -15,29 +15,25 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.24.5' # Use a versão do Go que você está usando
+        go-version: '1.24.5'
 
-    - name: Clean Go module cache
-      run: go clean -modcache
-
-    - name: Download Go modules
-      run: go mod download
-
-    - name: Run tests
-      run: go test ./... -v
-
-    - name: Tidy Go modules
-      run: go mod tidy
-
-    - name: Run tests
-      run: go test ./... -v
-
-    - name: Install golangci-lint
-      run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.57.2
-
-    - name: Run golangci-lint manually
+    - name: Test, Lint and Build
       run: |
-        golangci-lint run ./... --verbose --tests=true
+        echo "--- Environment --- "
+        go env
 
-    - name: Build
-      run: go build -v ./cmd/api
+        echo "--- Downloading dependencies ---"
+        go mod download
+
+        echo "--- Tidying modules ---"
+        go mod tidy
+
+        echo "--- Running tests ---"
+        go test ./... -v
+
+        echo "--- Installing and running golangci-lint ---"
+        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.57.2
+        golangci-lint run --verbose
+
+        echo "--- Building application ---"
+        go build -v ./cmd/api
