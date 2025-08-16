@@ -17,7 +17,8 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24.5'
-        cache: false
+        # Habilitar o cache de dependências é uma boa prática para acelerar o build
+        cache: true 
 
     - name: Install Dependencies
       run: |
@@ -27,10 +28,11 @@ jobs:
     - name: Run tests
       run: go test -mod=vendor ./... -v
 
-    - name: Install and run golangci-lint
-      run: |
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
-        golangci-lint run
+    - name: Install golangci-lint
+      run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
+
+    - name: Run golangci-lint
+      run: golangci-lint run
       env:
         GOFLAGS: -mod=vendor
 
