@@ -10,30 +10,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.24.5'
+        cache: false
 
-    - name: Test, Lint and Build
+    - name: Install Dependencies
       run: |
-        echo "--- Environment --- "
-        go env
-
-        echo "--- Downloading dependencies ---"
-        go mod download
-
-        echo "--- Tidying modules ---"
         go mod tidy
+        go mod vendor
+    
+    - name: Run tests
+      run: go test -mod=vendor ./... -v
 
-        echo "--- Running tests ---"
-        go test ./... -v
-
-        echo "--- Installing and running golangci-lint ---"
+    - name: Install and run golangci-lint
+      run: |
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.57.2
-        golangci-lint run --verbose
+        golangci-lint run
 
-        echo "--- Building application ---"
-        go build -v ./cmd/api
+    - name: Build
+      run: go build -mod=vendor -v ./cmd/api
